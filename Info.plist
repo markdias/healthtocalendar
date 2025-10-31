@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSHealthShareUsageDescription</key>
+	<string>This app reads workouts to export them to your calendar.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>This app adds workout events to your calendar.</string>
+</dict>
+</plist>

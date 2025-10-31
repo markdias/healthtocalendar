@@ -7,7 +7,8 @@ import HealthKit
 @MainActor
 final class EventKitManager: ObservableObject {
 	@Published private(set) var authorizationStatus: EKAuthorizationStatus = .notDetermined
-	@Published private(set) var calendars: [EKCalendar] = []
+        @Published private(set) var calendars: [EKCalendar] = []
+        @Published var exportedWorkoutIDs: Set<String> = []
 	@Published private(set) var lastError: Error?
 
 	let eventStore = EKEventStore()
@@ -38,17 +39,35 @@ final class EventKitManager: ObservableObject {
 		self.calendars = eventStore.calendars(for: .event).sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
 	}
 
-	func saveOrUpdateEvent(for item: WorkoutItem, in calendar: EKCalendar) throws -> EKEvent {
-		let existing = findExistingEvent(for: item, in: calendar)
-		let event = existing ?? EKEvent(eventStore: eventStore)
-		event.calendar = calendar
-		event.title = makeTitle(for: item)
-		event.startDate = item.startDate
-		event.endDate = item.endDate
-		event.notes = makeNotes(for: item)
-		try eventStore.save(event, span: .thisEvent, commit: true)
-		return event
-	}
+        func saveOrUpdateEvent(for item: WorkoutItem, in calendar: EKCalendar) throws -> EKEvent {
+                let existing = findExistingEvent(for: item, in: [calendar])
+                let event = existing ?? EKEvent(eventStore: eventStore)
+                event.calendar = calendar
+                event.title = makeTitle(for: item)
+                event.startDate = item.startDate
+                event.endDate = item.endDate
+                event.notes = makeNotes(for: item)
+                try eventStore.save(event, span: .thisEvent, commit: true)
+                return event
+        }
+
+        func refreshExportedWorkouts(from workouts: [WorkoutItem]) {
+                let status = EKEventStore.authorizationStatus(for: .event)
+                self.authorizationStatus = status
+                guard isReadable(status: status) else {
+                        exportedWorkoutIDs = []
+                        return
+                }
+
+                let calendars = eventStore.calendars(for: .event)
+                var exported: Set<String> = []
+                for workout in workouts {
+                        if findExistingEvent(for: workout, in: calendars) != nil {
+                                exported.insert(workout.id)
+                        }
+                }
+                exportedWorkoutIDs = exported
+        }
 
 	private func makeTitle(for item: WorkoutItem) -> String {
 		"Workout – \(item.workoutActivityType.displayName) (\(item.duration.formattedHMS()))"
@@ -76,23 +95,31 @@ final class EventKitManager: ObservableObject {
 		"HTC_ID=\(item.id) START=\(Int(item.startDate.timeIntervalSince1970)) DURATION=\(Int(item.duration)) TYPE=\(item.workoutActivityType.rawValue)"
 	}
 
-	private func findExistingEvent(for item: WorkoutItem, in calendar: EKCalendar) -> EKEvent? {
-		// First try to find by signature in notes
-		let timeWindowStart = item.startDate.addingTimeInterval(-5 * 60)
-		let timeWindowEnd = item.endDate.addingTimeInterval(5 * 60)
-		let predicate = eventStore.predicateForEvents(withStart: timeWindowStart, end: timeWindowEnd, calendars: [calendar])
-		let events = eventStore.events(matching: predicate)
-		let signature = signatureLine(for: item)
-		if let bySignature = events.first(where: { $0.notes?.contains(signature) == true }) {
-			return bySignature
-		}
+        private func findExistingEvent(for item: WorkoutItem, in calendars: [EKCalendar]) -> EKEvent? {
+                // First try to find by signature in notes
+                let timeWindowStart = item.startDate.addingTimeInterval(-5 * 60)
+                let timeWindowEnd = item.endDate.addingTimeInterval(5 * 60)
+                let predicate = eventStore.predicateForEvents(withStart: timeWindowStart, end: timeWindowEnd, calendars: calendars)
+                let events = eventStore.events(matching: predicate)
+                let signature = signatureLine(for: item)
+                if let bySignature = events.first(where: { $0.notes?.contains(signature) == true }) {
+                        return bySignature
+                }
 		// Fallback: match by duration and title type within window
 		return events.first(where: { event in
 			let durationMatches = abs(event.endDate.timeIntervalSince(event.startDate) - item.duration) < 60
 			let titleContainsType = (event.title ?? "").localizedCaseInsensitiveContains(item.workoutActivityType.displayName)
 			return durationMatches && titleContainsType
 		})
-	}
+        }
+
+        private func isReadable(status: EKAuthorizationStatus) -> Bool {
+                if #available(iOS 17.0, *) {
+                        return status == .authorized || status == .fullAccess
+                } else {
+                        return status == .authorized
+                }
+        }
 }
 
 struct CalendarPickerView: View {

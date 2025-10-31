@@ -6,13 +6,8 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		FD8316E82EB4249400AB6EF7 /* info.plist in Resources */ = {isa = PBXBuildFile; fileRef = FD8316E72EB4249400AB6EF7 /* info.plist */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXFileReference section */
 		FD8316CD2EB419DC00AB6EF7 /* healthtocalendar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = healthtocalendar.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		FD8316E72EB4249400AB6EF7 /* info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -37,7 +32,6 @@
 		FD8316C42EB419DC00AB6EF7 = {
 			isa = PBXGroup;
 			children = (
-				FD8316E72EB4249400AB6EF7 /* info.plist */,
 				FD8316CF2EB419DC00AB6EF7 /* healthtocalendar */,
 				FD8316CE2EB419DC00AB6EF7 /* Products */,
 			);
@@ -115,7 +109,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FD8316E82EB4249400AB6EF7 /* info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -267,7 +260,9 @@
 				DEVELOPMENT_TEAM = M7KXVX37Y7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "This app reads your Health data such as steps and heart rate to track your fitness progress.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "This app reads your Health data such as steps and heart rate to track your fitness progress.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -301,7 +296,9 @@
 				DEVELOPMENT_TEAM = M7KXVX37Y7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "This app reads your Health data such as steps and heart rate to track your fitness progress.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "This app reads your Health data such as steps and heart rate to track your fitness progress.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

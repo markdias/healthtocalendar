@@ -28,14 +28,23 @@ final class HealthKitManager: ObservableObject {
 		authorizationStatus = healthStore.authorizationStatus(for: HKObjectType.workoutType())
 	}
 
-	func loadRecentWorkouts(monthsBack: Int = 3) async {
-		await MainActor.run { self.isLoading = true; self.lastError = nil }
-		do {
-			let endDate = Date()
-			let startDate = Calendar.current.date(byAdding: .month, value: -monthsBack, to: endDate) ?? Date.distantPast
-			let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: [])
-			let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
-			let hkWorkouts: [HKWorkout] = try await queryWorkouts(predicate: predicate, sortDescriptors: [sort])
+        func loadRecentWorkouts(monthsBack: Int? = 3) async {
+                await MainActor.run { self.isLoading = true; self.lastError = nil }
+                do {
+                        let endDate = Date()
+                        let predicate: NSPredicate?
+                        let queryLimit: Int
+                        if let monthsBack {
+                                let startDate = Calendar.current.date(byAdding: .month, value: -monthsBack, to: endDate) ?? Date.distantPast
+                                predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: [])
+                                queryLimit = HKObjectQueryNoLimit
+                        } else {
+                                predicate = nil
+                                queryLimit = HKObjectQueryNoLimit
+                        }
+
+                        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+                        let hkWorkouts: [HKWorkout] = try await queryWorkouts(predicate: predicate, sortDescriptors: [sort], limit: queryLimit)
 			
 			// First, load workouts without HR stats for immediate display
 			let itemsWithoutHR = await MainActor.run {
@@ -77,9 +86,9 @@ final class HealthKitManager: ObservableObject {
 		await MainActor.run { self.isLoading = false }
 	}
 
-	private func queryWorkouts(predicate: NSPredicate?, sortDescriptors: [NSSortDescriptor]?, limit: Int = 100) async throws -> [HKWorkout] {
-		try await withCheckedThrowingContinuation { continuation in
-			let query = HKSampleQuery(sampleType: .workoutType(), predicate: predicate, limit: limit, sortDescriptors: sortDescriptors) { _, samples, error in
+        private func queryWorkouts(predicate: NSPredicate?, sortDescriptors: [NSSortDescriptor]?, limit: Int) async throws -> [HKWorkout] {
+                try await withCheckedThrowingContinuation { continuation in
+                        let query = HKSampleQuery(sampleType: .workoutType(), predicate: predicate, limit: limit, sortDescriptors: sortDescriptors) { _, samples, error in
 				if let error { continuation.resume(throwing: error); return }
 				let workouts = samples as? [HKWorkout] ?? []
 				continuation.resume(returning: workouts)

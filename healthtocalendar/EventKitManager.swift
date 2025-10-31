@@ -123,30 +123,42 @@ final class EventKitManager: ObservableObject {
 }
 
 struct CalendarPickerView: View {
-	@ObservedObject var manager: EventKitManager
-	@Binding var selectedCalendar: EKCalendar?
-	@Environment(\.dismiss) private var dismiss
+        @ObservedObject var manager: EventKitManager
+        @Binding var selectedCalendar: EKCalendar?
+        let onFinish: (EKCalendar?) -> Void
 
-	var body: some View {
-		NavigationView {
-			List(manager.calendars, id: \.calendarIdentifier) { calendar in
-				HStack {
-					Text(calendar.title)
-					Spacer()
-					if selectedCalendar?.calendarIdentifier == calendar.calendarIdentifier { Image(systemName: "checkmark") }
-				}
-				.contentShape(Rectangle())
-				.onTapGesture { selectedCalendar = calendar }
-			}
-			.navigationTitle("Choose Calendar")
-			.toolbar {
-				ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-				ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
-			}
-		}
-		.onAppear {
-			manager.reloadCalendars()
-		}
-	}
+        @Environment(\.dismiss) private var dismiss
+
+        var body: some View {
+                NavigationView {
+                        List(manager.calendars, id: \.calendarIdentifier) { calendar in
+                                HStack {
+                                        Text(calendar.title)
+                                        Spacer()
+                                        if selectedCalendar?.calendarIdentifier == calendar.calendarIdentifier { Image(systemName: "checkmark") }
+                                }
+                                .contentShape(Rectangle())
+                                .onTapGesture { selectedCalendar = calendar }
+                        }
+                        .navigationTitle("Choose Calendar")
+                        .toolbar {
+                                ToolbarItem(placement: .cancellationAction) {
+                                        Button("Cancel") {
+                                                onFinish(nil)
+                                                dismiss()
+                                        }
+                                }
+                                ToolbarItem(placement: .confirmationAction) {
+                                        Button("Done") {
+                                                onFinish(selectedCalendar)
+                                                dismiss()
+                                        }
+                                }
+                        }
+                }
+                .onAppear {
+                        manager.reloadCalendars()
+                }
+        }
 }
 
